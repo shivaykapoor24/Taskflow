@@ -1,236 +1,56 @@
-# Taskflow — Project Management Tool
-### React · Node.js · Express · MongoDB · Netlify · GitLab CI/CD
+🚀 Taskflow — Project Management Tool
 
----
+A full-stack project management application for creating, organizing, and tracking tasks across multiple projects with a modern Kanban-style workflow.
 
-## Tech stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | React (CRA or Vite), React Router, Context API |
-| Backend | Node.js 18, Express 4, JWT auth |
-| Database | MongoDB Atlas (free M0 tier) |
-| Frontend hosting | Netlify (free) |
-| Backend hosting | Render (free) |
-| CI/CD | GitLab CI/CD |
-
----
-
-## Project structure
-
-```
+✨ Features
+🔐 User authentication (JWT-based login/register)
+📁 Create, update, and delete projects
+✅ Task management with status tracking (Todo / In Progress / Done)
+👥 Assign tasks to users
+📊 Project-wise task overview and stats
+🎯 Role-based access control
+📱 Fully responsive UI for all devices
+🛠️ Tech Stack
+Frontend
+React
+React Router
+Context API
+Axios
+Backend
+Node.js
+Express.js
+JWT Authentication
+REST APIs
+Database
+MongoDB (MongoDB Atlas)
+Deployment
+Frontend: Netlify
+Backend: Render
+📁 Project Structure
 taskflow/
-├── frontend/             ← React app (your existing Curio-style app)
-│   ├── src/
-│   │   └── services/
-│   │       └── api.js    ← drop in the provided api.js here
-│   ├── .env.development
-│   ├── .env.production
-│   └── netlify.toml
-│
-├── backend/              ← Node.js API
-│   ├── models/
-│   │   ├── User.js
-│   │   ├── Project.js
-│   │   └── Task.js
-│   ├── routes/
-│   │   ├── auth.js
-│   │   ├── projects.js
-│   │   ├── tasks.js
-│   │   └── users.js
-│   ├── middleware/
-│   │   ├── auth.js
-│   │   └── errorHandler.js
-│   ├── server.js
-│   ├── Dockerfile
-│   ├── .env.example      ← copy to .env and fill in values
-│   └── package.json
-│
-├── .gitlab-ci.yml        ← CI/CD pipeline
-└── render.yaml           ← Render deployment blueprint
-```
+├── frontend/        # React application
+├── backend/         # Node.js + Express API
+├── render.yaml      # Backend deployment config
+└── .gitlab-ci.yml   # CI/CD pipeline (optional)
 
----
+📡 API Overview
+Auth
+POST /api/auth/register → Register user
+POST /api/auth/login → Login user
+GET /api/auth/me → Get profile
+Projects
+GET /api/projects → Get all projects
+POST /api/projects → Create project
+PATCH /api/projects/:id → Update project
+DELETE /api/projects/:id → Delete project
+Tasks
+GET /api/tasks → Get tasks
+POST /api/tasks → Create task
+PATCH /api/tasks/:id → Update task
+DELETE /api/tasks/:id → Delete task
 
-## Step 1 — MongoDB Atlas (database)
-
-1. Go to [mongodb.com/atlas](https://www.mongodb.com/atlas) → create free account
-2. Create a free **M0** cluster (any region)
-3. Database Access → Add a user with password, note credentials
-4. Network Access → Add IP `0.0.0.0/0` (allow all, fine for dev)
-5. Connect → Drivers → copy the connection string
-6. Replace `<username>` and `<password>` in the string
-
----
-
-## Step 2 — Backend setup (local)
-
-```bash
-cd backend
-cp .env.example .env
-# Edit .env: paste your MONGO_URI and set a strong JWT_SECRET
-npm install
-npm run dev
-# → Server running on http://localhost:5000
-# → Test: curl http://localhost:5000/health
-```
-
----
-
-## Step 3 — Frontend setup (local)
-
-```bash
-cd frontend
-cp .env.example .env.development
-# REACT_APP_API_URL=http://localhost:5000/api  (already set)
-npm install
-npm start
-```
-
----
-
-## Step 4 — Deploy backend to Render (free)
-
-1. Push your repo to GitLab
-2. Go to [render.com](https://render.com) → New → **Web Service**
-3. Connect GitLab and select your repo
-4. Settings:
-   - Root directory: `backend`
-   - Build command: `npm ci`
-   - Start command: `node server.js`
-5. Environment variables → add these manually (never commit secrets):
-   - `MONGO_URI` — your Atlas connection string
-   - `JWT_SECRET` — a 64-char random string
-   - `FRONTEND_URL` — your Netlify URL (add after step 5)
-6. Click **Deploy** → wait for "Live" status
-7. Copy your Render URL: `https://taskflow-api-xxxx.onrender.com`
-
----
-
-## Step 5 — Deploy frontend to Netlify
-
-1. In your frontend folder, create `.env.production`:
-   ```
-   REACT_APP_API_URL=https://taskflow-api-xxxx.onrender.com/api
-   ```
-2. Go to [netlify.com](https://netlify.com) → New site → **Import from Git**
-3. Connect GitLab → select your repo
-4. Build settings:
-   - Base directory: `frontend`
-   - Build command: `npm run build`
-   - Publish directory: `frontend/build`
-5. Environment variables → add `REACT_APP_API_URL` (same as above)
-6. Click **Deploy site**
-7. Copy your Netlify URL → go back to Render and set `FRONTEND_URL`
-
----
-
-## Step 6 — GitLab CI/CD
-
-1. In GitLab → Settings → CI/CD → Variables → add:
-
-   | Variable | Value | Protected | Masked |
-   |---|---|---|---|
-   | `NETLIFY_AUTH_TOKEN` | From Netlify User Settings → Personal access tokens | ✅ | ✅ |
-   | `NETLIFY_SITE_ID` | From Netlify Site settings → Site ID | ✅ | ✅ |
-   | `NETLIFY_SITE_URL` | `https://your-site.netlify.app` | | |
-   | `RENDER_DEPLOY_HOOK_URL` | From Render Dashboard → Deploy hooks | ✅ | ✅ |
-
-2. Push `.gitlab-ci.yml` to your repo root
-3. Every push to `main` will:
-   - Run backend tests
-   - Run frontend tests
-   - Build the React app
-   - Deploy frontend to Netlify
-   - Trigger Render backend redeploy
-
----
-
-## API reference
-
-### Auth
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/auth/register` | Register new user |
-| POST | `/api/auth/login` | Login → returns JWT |
-| GET | `/api/auth/me` | Get current user |
-| PATCH | `/api/auth/me` | Update name/avatar |
-| POST | `/api/auth/change-password` | Change password |
-
-### Projects
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/projects` | List user's projects |
-| POST | `/api/projects` | Create project |
-| GET | `/api/projects/:id` | Get project |
-| PATCH | `/api/projects/:id` | Update project |
-| DELETE | `/api/projects/:id` | Delete project + tasks |
-| GET | `/api/projects/:id/stats` | Task stats |
-| POST | `/api/projects/:id/members` | Add member |
-| DELETE | `/api/projects/:id/members/:userId` | Remove member |
-
-### Tasks
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/tasks?projectId=` | List tasks (filterable) |
-| POST | `/api/tasks` | Create task |
-| GET | `/api/tasks/:id` | Get task |
-| PATCH | `/api/tasks/:id` | Update task |
-| DELETE | `/api/tasks/:id` | Delete task |
-| PATCH | `/api/tasks/bulk/status` | Bulk status update |
-| GET | `/api/tasks/my/assigned` | My assigned tasks |
-
----
-
-## .gitignore
-
-```
-# Node
-node_modules/
-npm-debug.log*
-
-# Env files — NEVER commit these
-.env
-.env.local
-.env.production
-
-# Build artifacts
-build/
-dist/
-coverage/
-
-# OS
-.DS_Store
-Thumbs.db
-```
-
----
-
-## Connecting the React app
-
-Replace hardcoded data in your React components with API calls:
-
-```js
-import { projectsAPI, tasksAPI, authAPI, setToken } from './services/api';
-
-// Login
-const { token, user } = await authAPI.login(email, password);
-setToken(token);
-
-// Load projects
-const { projects } = await projectsAPI.list();
-
-// Load tasks for a project
-const { tasks } = await tasksAPI.list(projectId, { status: 'in-progress' });
-
-// Create a task
-const { task } = await tasksAPI.create({
-  title: 'Build login page',
-  projectId,
-  priority: 'high',
-  dueDate: '2025-07-01',
-});
-
-// Update task status (Kanban drag/drop)
-await tasksAPI.update(taskId, { status: 'done' });
-```
+🚀 Future Improvements
+Drag & drop Kanban board
+Real-time updates (Socket.io)
+Notifications system
+Team collaboration features
