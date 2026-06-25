@@ -1,0 +1,113 @@
+# .gitlab-ci.yml — place this at the root of your repository
+# Repo structure assumed:
+#   /frontend   (React app)
+#   /backend    (Node.js API)
+
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+  NODE_VERSION: "18"
+
+# ─── Reusable anchors ─────────────────────────────────────────────────────────
+.node_setup: &node_setup
+  image: node:18-alpine
+  before_script:
+    - node --version
+    - npm --version
+
+# ─── Backend: test ────────────────────────────────────────────────────────────
+backend:test:
+  <<: *node_setup
+  stage: test
+  script:
+    - cd backend
+    - npm ci
+    - npm test -- --passWithNoTests
+  coverage: '/Statements\s*:\s*(\d+\.?\d*)%/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/coverage/cobertura-coverage.xml
+  rules:
+    - changes:
+        - backend/**/*
+
+# ─── Frontend: test ───────────────────────────────────────────────────────────
+frontend:test:
+  <<: *node_setup
+  stage: test
+  script:
+    - cd frontend
+    - npm ci
+    - CI=true npm test -- --passWithNoTests
+  rules:
+    - changes:
+        - frontend/**/*
+
+# ─── Frontend: build ──────────────────────────────────────────────────────────
+frontend:build:
+  <<: *node_setup
+  stage: build
+  script:
+    - cd frontend
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - frontend/build/
+    expire_in: 1 hour
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# ─── Frontend: deploy to Netlify ──────────────────────────────────────────────
+# Requires CI/CD variables: NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID
+frontend:deploy:
+  stage: deploy
+  image: node:18-alpine
+  needs: [frontend:build]
+  before_script:
+    - npm install -g netlify-cli
+  script:
+    - cd frontend
+    - netlify deploy
+        --auth $NETLIFY_AUTH_TOKEN
+        --site $NETLIFY_SITE_ID
+        --dir build
+        --prod
+        --message "Deployed from GitLab CI — $CI_COMMIT_SHORT_SHA"
+  environment:
+    name: production
+    url: $NETLIFY_SITE_URL
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# ─── Backend: deploy to Render ────────────────────────────────────────────────
+# Render auto-deploys from GitLab when connected; this hook triggers it manually.
+# Requires CI/CD variable: RENDER_DEPLOY_HOOK_URL
+backend:deploy:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - |
+      echo "Triggering Render deploy..."
+      curl -X POST "$RENDER_DEPLOY_HOOK_URL" \
+        -H "Accept: application/json" \
+        --fail --silent --show-error
+      echo "Deploy triggered successfully"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - backend/**/*
+
+# ─── Notify on failure ────────────────────────────────────────────────────────
+.notify_failure: &notify
+  when: on_failure
+  script:
+    - echo "Pipeline failed on branch $CI_COMMIT_BRANCH"
+  # Swap for Slack/email notification when ready

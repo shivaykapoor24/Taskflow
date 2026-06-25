@@ -1,0 +1,27 @@
+# render.yaml — place this at the repo root
+# Render reads this file to configure your backend service automatically.
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: taskflow-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: node server.js
+    healthCheckPath: /health
+    autoDeploy: true          # deploy automatically on push to main
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000           # Render uses 10000 internally
+      - key: MONGO_URI
+        sync: false            # set manually in Render dashboard (secret)
+      - key: JWT_SECRET
+        sync: false            # set manually in Render dashboard (secret)
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: FRONTEND_URL
+        sync: false            # set to your Netlify URL after first deploy

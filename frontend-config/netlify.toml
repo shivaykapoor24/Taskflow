@@ -1,0 +1,25 @@
+# netlify.toml — place this in your React project root
+
+[build]
+  base    = "."           # root of your React project
+  command = "npm run build"
+  publish = "build"       # CRA output folder (or "dist" for Vite)
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# SPA fallback — all routes serve index.html so React Router works
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+# Optional: proxy /api calls to your backend during Netlify dev
+# [[redirects]]
+#   from   = "/api/*"
+#   to     = "https://your-backend.onrender.com/api/:splat"
+#   status = 200
+
+[dev]
+  command = "npm start"
+  port    = 3000

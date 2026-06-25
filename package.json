@@ -1,21 +1,20 @@
 {
-  "name": "curio-ecommerce",
-  "private": true,
+  "name": "taskflow",
   "version": "1.0.0",
-  "type": "module",
+  "description": "Taskflow Project Management Tool - React + Node.js + MongoDB",
+  "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "install:all": "cd backend && npm install && cd ../frontend && npm install && cd ..",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm start --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "start": "npm start --prefix backend"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "concurrently": "^8.2.2"
   },
-  "devDependencies": {
-    "@types/react": "^18.3.1",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.4.2"
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
